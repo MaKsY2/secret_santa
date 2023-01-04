@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS users CASCADE;
+
+CREATE TABLE users (
+  user_id SERIAL,
+  name VARCHAR(100) NOT NULL,
+  PRIMARY KEY (user_id)
+);
