@@ -1,5 +1,6 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
+use diesel::result::Error;
 use rocket::*;
 use rocket::http::Status;
 use rocket::response::status::NotFound;
@@ -26,22 +27,32 @@ fn post_users(data: Json<NewUser>) -> Json<User> {
 }
 
 #[get("/users/<user_id>")]
-fn get_user(user_id: i32) -> Json<User> {
+fn get_user(user_id: i32) -> Result<Json<User>, NotFound<String>> {
     let controller : UsersController = UsersController();
-    return Json(controller.get_user(user_id))
+    return match controller.get_user(user_id) {
+        Ok(user) => Ok(Json(user)),
+        Err(err) => if err.eq(&Error::NotFound)
+        { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
+    };
 }
 
 #[put("/users/<user_id>", format = "json", data = "<data>")]
-fn put_user(user_id: i32, data: Json<UpdatedUser>) -> Json<User> {
+fn put_user(user_id: i32, data: Json<UpdatedUser>) -> Result<Json<User>, NotFound<String>> {
     let controller : UsersController = UsersController();
-    return Json(controller.update_user(user_id, data.into_inner()));
+    return match controller.update_user(user_id, data.into_inner()) {
+        Ok(user) => Ok(Json(user)),
+        Err(err) => if err.eq(&Error::NotFound)
+        { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
+    }
 }
 
 #[delete("/users/<user_id>")]
-fn delete_user(user_id: i32) -> Status {
+fn delete_user(user_id: i32) -> Result<Status, NotFound<String>> {
     let controller : UsersController = UsersController();
-    controller.delete_user(user_id);
-    return Status::Ok;
+    return match controller.delete_user(user_id) {
+        Ok(_res) => if _res == 0 {Err(NotFound("Not found".to_string()))} else {Ok(Status::Ok)},
+        Err(err) => panic!("{}", err.to_string())
+    };
 }
 
 fn main() {

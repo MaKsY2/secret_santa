@@ -1,4 +1,5 @@
 use diesel::prelude::*;
+use diesel::result::Error;
 
 use crate::models::*;
 use crate::establish_connection;
@@ -8,9 +9,9 @@ pub struct UsersController();
 pub trait UsersControllerTraits {
     fn get_users(&self) -> Vec<User>;
     fn create_user(&self, data: NewUser) -> User;
-    fn get_user(&self, user_id: i32) -> User;
-    fn update_user(&self, user_id: i32, data: UpdatedUser) -> User;
-    fn delete_user(&self, user_id: i32);
+    fn get_user(&self, user_id: i32) -> Result<User, Error>;
+    fn update_user(&self, user_id: i32, data: UpdatedUser) -> Result<User, Error>;
+    fn delete_user(&self, user_id: i32) -> Result<usize, Error>;
 }
 
 impl UsersControllerTraits for UsersController {
@@ -29,27 +30,24 @@ impl UsersControllerTraits for UsersController {
         .get_result::<User>(&mut connection)
         .expect("Error saving new user")
     }
-    fn get_user(&self, _user_id: i32) -> User {
+    fn get_user(&self, _user_id: i32) -> Result<User, Error> {
         use crate::schema::users::dsl::*;
         let mut connection = establish_connection();
         return users
             .filter(user_id.eq(_user_id))
-            .first::<User>(&mut connection)
-            .unwrap();
+            .first::<User>(&mut connection);
     }
-    fn update_user(&self, _user_id: i32, data: UpdatedUser) -> User {
+    fn update_user(&self, _user_id: i32, data: UpdatedUser) -> Result<User, Error> {
         use crate::schema::users::dsl::*;
         let mut connection = establish_connection();
         return diesel::update(users.filter(user_id.eq(_user_id)))
             .set(&data)
-            .get_result::<User>(&mut connection)
-            .unwrap();
+            .get_result::<User>(&mut connection);
     }
-    fn delete_user(&self, _user_id: i32) {
+    fn delete_user(&self, _user_id: i32) -> Result<usize, Error>{
         use crate::schema::users::dsl::*;
         let mut connection = establish_connection();
-        diesel::delete(users.filter(user_id.eq(_user_id)))
-            .execute(&mut connection)
-            .expect("Error deleting user");
+        return diesel::delete(users.filter(user_id.eq(_user_id)))
+            .execute(&mut connection);
     }
 }
