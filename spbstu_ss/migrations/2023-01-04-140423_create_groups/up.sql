@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS groups CASCADE;
 CREATE TABLE groups (
   group_id SERIAL,
+  name VARCHAR(100) NOT NULL,
   status VARCHAR(100) NOT NULL DEFAULT 'open',
   PRIMARY KEY (group_id)
 );
