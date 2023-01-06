@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::models::*;
+use crate::models::user_model::*;
 use crate::establish_connection;
 
 pub struct UsersController();
