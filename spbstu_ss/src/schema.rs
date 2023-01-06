@@ -3,6 +3,7 @@
 diesel::table! {
     groups (group_id) {
         group_id -> Int4,
+        name -> Varchar,
         status -> Varchar,
     }
 }
