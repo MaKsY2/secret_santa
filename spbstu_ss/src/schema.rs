@@ -9,18 +9,18 @@ diesel::table! {
 }
 
 diesel::table! {
-    santas (group_id, santa_user_id) {
+    memberships (user_id, group_id) {
         group_id -> Int4,
-        santa_user_id -> Int4,
-        reciever_user_id -> Int4,
+        user_id -> Int4,
+        role -> Varchar,
     }
 }
 
 diesel::table! {
-    user_to_group (user_id, group_id) {
+    santas (group_id, santa_user_id) {
         group_id -> Int4,
-        user_id -> Int4,
-        role -> Varchar,
+        santa_user_id -> Int4,
+        reciever_user_id -> Int4,
     }
 }
 
@@ -31,13 +31,13 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(memberships -> groups (group_id));
+diesel::joinable!(memberships -> users (user_id));
 diesel::joinable!(santas -> groups (group_id));
-diesel::joinable!(user_to_group -> groups (group_id));
-diesel::joinable!(user_to_group -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     groups,
+    memberships,
     santas,
-    user_to_group,
     users,
 );
