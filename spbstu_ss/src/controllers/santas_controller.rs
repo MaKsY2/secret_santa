@@ -4,7 +4,9 @@ use crate::controllers::memberships_controller::{MembershipsController, Membersh
 
 use crate::models::santa_model::*;
 use crate::establish_connection;
-use crate::models::membership_model::Membership;
+
+use rand::thread_rng;
+use rand::seq::SliceRandom;
 
 pub struct SantasController();
 
@@ -24,10 +26,11 @@ impl SantasControllerTraits for SantasController {
     }
     fn generate_santas(&self, group_id: i32) -> Result<Vec<Santa>, Error> {
         let memberships_ctrl = MembershipsController();
-        let mut memberships = memberships_ctrl.get_memberships(_group_id);
+        let mut memberships = memberships_ctrl.get_memberships(group_id);
         if memberships.len() == 0 {
             return Ok(vec![]);
         }
+
         memberships.shuffle(&mut thread_rng());
         let mut santas: Vec<Santa> = vec![];
         for i in 0..memberships.len() - 1 {
@@ -44,7 +47,7 @@ impl SantasControllerTraits for SantasController {
         );
         use crate::schema::santas;
         let mut connection = establish_connection();
-        return diesel::insert_into(groups::table)
+        return diesel::insert_into(santas::table)
             .values(&santas)
             .get_results(&mut connection);
     }
