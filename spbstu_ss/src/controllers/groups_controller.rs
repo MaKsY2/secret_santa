@@ -11,7 +11,7 @@ pub trait GroupsControllerTraits {
     fn create_group(&self, data: NewGroup) -> Group;
     fn get_group(&self, group_id: i32) -> Result<Group, Error>;
     fn update_group(&self, group_id:i32, data: UpdatedGroup) -> Result<Group, Error>;
-    fn delete_group(&self, group_id:i32) -> Result<usize, Error>; 
+    fn delete_group(&self, group_id:i32) -> Result<usize, Error>;
 }
 
 impl GroupsControllerTraits for GroupsController {

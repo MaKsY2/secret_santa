@@ -8,7 +8,6 @@ use rocket_contrib::json::Json;
 
 use spbstu_ss::models::user_model::{User, NewUser, UpdatedUser};
 use spbstu_ss::controllers::users_controller::*;
-use spbstu_ss::controllers::groups_controller::*;
 
 #[get("/hello/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {

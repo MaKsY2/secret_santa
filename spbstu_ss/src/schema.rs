@@ -20,7 +20,7 @@ diesel::table! {
     santas (group_id, santa_user_id) {
         group_id -> Int4,
         santa_user_id -> Int4,
-        reciever_user_id -> Int4,
+        receiver_user_id -> Int4,
     }
 }
 
