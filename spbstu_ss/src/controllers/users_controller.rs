@@ -10,6 +10,7 @@ pub trait UsersControllerTraits {
     fn get_users(&self) -> Vec<User>;
     fn create_user(&self, data: NewUser) -> User;
     fn get_user(&self, user_id: i32) -> Result<User, Error>;
+    fn get_user_by_name(&self, user_name: String) -> Result<User, Error>;
     fn update_user(&self, user_id: i32, data: UpdatedUser) -> Result<User, Error>;
     fn delete_user(&self, user_id: i32) -> Result<usize, Error>;
 }
@@ -35,6 +36,13 @@ impl UsersControllerTraits for UsersController {
         let mut connection = establish_connection();
         return users
             .filter(user_id.eq(_user_id))
+            .first::<User>(&mut connection);
+    }
+    fn get_user_by_name(&self, user_name: String) -> Result<User, Error> {
+        use crate::schema::users::dsl::*;
+        let mut connection = establish_connection();
+        return users
+            .filter(name.eq(user_name))
             .first::<User>(&mut connection);
     }
     fn update_user(&self, _user_id: i32, data: UpdatedUser) -> Result<User, Error> {
