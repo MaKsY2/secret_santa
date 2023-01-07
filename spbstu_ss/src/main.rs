@@ -5,9 +5,11 @@ use rocket::*;
 use rocket::http::Status;
 use rocket::response::status::NotFound;
 use rocket_contrib::json::Json;
+use spbstu_ss::controllers::memberships_controller::{MembershipsController, MembershipsControllerTraits};
 
 use spbstu_ss::models::user_model::{User, NewUser, UpdatedUser};
 use spbstu_ss::controllers::users_controller::*;
+use spbstu_ss::models::membership_model::{Membership, NewMembership, UpdatedMembership};
 
 #[get("/hello/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {
@@ -50,6 +52,37 @@ fn put_user(user_id: i32, data: Json<UpdatedUser>) -> Result<Json<User>, NotFoun
 fn delete_user(user_id: i32) -> Result<Status, NotFound<String>> {
     let controller : UsersController = UsersController();
     return match controller.delete_user(user_id) {
+        Ok(_res) => if _res == 0 {Err(NotFound("Not found".to_string()))} else {Ok(Status::Ok)},
+        Err(err) => panic!("{}", err.to_string())
+    };
+}
+
+#[get("/memberships?<group_id>&<user_id>")]
+fn get_memberships(group_id: Option<i32>, user_id: Option<i32>) -> Json<Vec<Membership>> {
+    let controller : MembershipsController = MembershipsController();
+    return Json(controller.get_memberships(group_id, user_id));
+}
+
+#[put("/memberships?<group_id>&<user_id>", format = "json", data = "<data>")]
+fn put_membership(group_id: i32, user_id: i32, data: Json<UpdatedMembership>) -> Result<Json<Membership>, NotFound<String>> {
+    let controller : MembershipsController = MembershipsController();
+    return match controller.update_membership(group_id, user_id) {
+        Ok(membership) => Ok(Json(membership)),
+        Err(err) => if err.eq(&Error::NotFound)
+        { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
+    }
+}
+
+#[post("/memberships", format = "json", data = "<data>")]
+fn post_membership(data: Json<NewMembership>) -> Json<Membership> {
+    let controller : MembershipsController = MembershipsController();
+    return Json(controller.create_membership(data.into_inner()));
+}
+
+#[delete("/memberships?<group_id>&<user_id>")]
+fn delete_membership(group_id: i32, user_id: i32) -> Result<Status, NotFound<String>> {
+    let controller : MembershipsController = MembershipsController();
+    return match controller.delete_membership(group_id, user_id) {
         Ok(_res) => if _res == 0 {Err(NotFound("Not found".to_string()))} else {Ok(Status::Ok)},
         Err(err) => panic!("{}", err.to_string())
     };

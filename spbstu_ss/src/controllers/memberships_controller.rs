@@ -7,7 +7,7 @@ use crate::establish_connection;
 pub struct MembershipsController();
 
 pub trait MembershipsControllerTraits {
-    fn get_memberships(&self, group_id: i32) -> Vec<Membership>;
+    fn get_memberships(&self, group_id: Option<i32>, user_id: Option<i32>) -> Vec<Membership>;
     fn create_membership(&self, data: NewMembership) -> Membership;
     fn get_membership(&self, group_id: i32, user_id: i32) -> Result<Membership, Error>;
     fn update_membership(&self, group_id:i32, user_id: i32, data: UpdatedMembership) -> Result<Membership, Error>;
@@ -15,11 +15,17 @@ pub trait MembershipsControllerTraits {
 }
 
 impl MembershipsControllerTraits for MembershipsController {
-    fn get_memberships(&self, _group_id: i32) -> Vec<Membership> {
+    fn get_memberships(&self, _group_id: Option<i32>, _user_id: Option<i32>) -> Vec<Membership> {
         use crate::schema::memberships::dsl::*;
         let mut connection = establish_connection();
-        return match memberships
-            .filter(group_id.eq(_group_id))
+        let mut query = memberships;
+        if _group_id.is_some() {
+            query = query.filter(group_id.eq(_group_id));
+        }
+        if _user_id.is_some() {
+            query = query.filter(user_id.eq(_user_id));
+        }
+        return match query
             .load::<Membership>(&mut connection) {
             Ok(res) => res,
             Err(_res) => Vec::new()
