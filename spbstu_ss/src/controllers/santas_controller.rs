@@ -26,7 +26,7 @@ impl SantasControllerTraits for SantasController {
     }
     fn generate_santas(&self, group_id: i32) -> Result<Vec<Santa>, Error> {
         let memberships_ctrl = MembershipsController();
-        let mut memberships = memberships_ctrl.get_memberships(group_id);
+        let mut memberships = memberships_ctrl.get_memberships(Some(group_id), None);
         if memberships.len() == 0 {
             return Ok(vec![]);
         }
