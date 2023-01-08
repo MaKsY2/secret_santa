@@ -126,7 +126,7 @@ fn get_user(user_id: i32) -> Result<Json<User>, NotFound<String>> {
 #[put("/users/<user_id>", format = "json", data = "<data>")]
 fn put_user(user_id: i32, data: Json<UpdatedUser>, user: UserFromToken) -> Result<Json<User>, Status> {
     let controller: UsersController = UsersController();
-    if user.user_id != user_id {
+    if user.0.user_id != user_id {
         return Err(Status::Unauthorized);
     }
     return match controller.update_user(user_id, data.into_inner()) {
@@ -143,7 +143,7 @@ fn put_user(user_id: i32, data: Json<UpdatedUser>, user: UserFromToken) -> Resul
 
 #[delete("/users/<user_id>")]
 fn delete_user(user_id: i32, user: UserFromToken) -> Result<Status, Status> {
-    if user.user_id != user_id {
+    if user.0.user_id != user_id {
         return Err(Status::Unauthorized);
     }
     let controller: UsersController = UsersController();
@@ -166,26 +166,48 @@ fn get_memberships(group_id: Option<i32>, user_id: Option<i32>) -> Json<Vec<Memb
 }
 
 #[put("/memberships?<group_id>&<user_id>", format = "json", data = "<data>")]
-fn put_membership(group_id: i32, user_id: i32, data: Json<UpdatedMembership>) -> Result<Json<Membership>, NotFound<String>> {
+fn put_membership(group_id: i32, user_id: i32, data: Json<UpdatedMembership>, user: UserFromToken)
+        -> Result<Json<Membership>, Status> {
     let controller : MembershipsController = MembershipsController();
+    let my_membership = controller.get_membership(group_id, user.0.user_id);
+    match my_membership {
+        Err(e) => if err.eq(&Error::NotFound)
+        { return Err(Status::Unauthorized) } else { panic!("{}", err.to_string()) },
+        Ok(m) => if m.role != "admin" { return Err(Status::Unauthorized); }
+    }
     return match controller.update_membership(group_id, user_id, data.into_inner()) {
         Ok(membership) => Ok(Json(membership)),
         Err(err) => if err.eq(&Error::NotFound)
-        { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
+        { Err(Status::NotFound) } else { panic!("{}", err.to_string()) }
     }
 }
 
 #[post("/memberships", format = "json", data = "<data>")]
-fn post_membership(data: Json<NewMembership>) -> Json<Membership> {
+fn post_membership(data: Json<NewMembership>, user: UserFromToken) -> Result<Json<Membership>, Status> {
+    if user.0.user_id != data.into_inner().user_id {
+        return Err(Status::Unauthorized);
+    }
     let controller : MembershipsController = MembershipsController();
-    return Json(controller.create_membership(data.into_inner()));
+    return Ok(Json(controller.create_membership(data.into_inner())));
 }
 
 #[delete("/memberships?<group_id>&<user_id>")]
-fn delete_membership(group_id: i32, user_id: i32) -> Result<Status, NotFound<String>> {
+fn delete_membership(group_id: i32, user_id: i32, user: UserFromToken) -> Result<Status, Status> {
     let controller: MembershipsController = MembershipsController();
+    let my_membership = controller.get_membership(group_id, user.0.user_id);
+    match my_membership {
+        Ok(m) => {
+            if user.0.user_id != data.into_inner().user_id && m.role != "admin" {
+                return Err(Status::Unauthorized);
+            }
+        },
+        Err(e) => return Err(Status::Unauthorized)
+    }
+    if user.0.user_id != data.into_inner().user_id {
+        return Err(Status::Unauthorized);
+    }
     return match controller.delete_membership(group_id, user_id) {
-        Ok(_res) => if _res == 0 { Err(NotFound("Not found".to_string())) } else { Ok(Status::Ok) },
+        Ok(_res) => if _res == 0 { Err(Status::NotFound) } else { Ok(Status::Ok) },
         Err(err) => panic!("{}", err.to_string())
     };
 }
