@@ -15,6 +15,7 @@ use std::convert::Infallible;
 use auth::*;
 use spbstu_ss::models::group_model::{Group, NewGroup, UpdatedGroup};
 use spbstu_ss::controllers::users_controller::*;
+use spbstu_ss::controllers::groups_controller::*;
 use spbstu_ss::models::membership_model::{Membership, NewMembership, UpdatedMembership};
 use spbstu_ss::models::user_model::{NewUser, UpdatedUser, User};
 use spbstu_ss::models::{Claims, LoginRequest, LoginResponse};
@@ -242,8 +243,5 @@ fn main() {
         )
         .launch();
 }
-<<<<<<< HEAD
-=======
 
 //TODO допилить delete_groups
->>>>>>> 787fd4f (added some work with groups in main.rs)
