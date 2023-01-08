@@ -13,32 +13,36 @@ use spbstu_ss::controllers::memberships_controller::{MembershipsController, Memb
 use std::convert::Infallible;
 
 use auth::*;
-use spbstu_ss::models::group_model::{Group, NewGroup, UpdatedGroup};
 use spbstu_ss::controllers::users_controller::*;
 use spbstu_ss::controllers::groups_controller::*;
-use spbstu_ss::models::membership_model::{Membership, NewMembership, UpdatedMembership};
 use spbstu_ss::models::user_model::{NewUser, UpdatedUser, User};
-use spbstu_ss::models::{Claims, LoginRequest, LoginResponse};
+use spbstu_ss::models::group_model::{Group, NewGroup, UpdatedGroup};
+use spbstu_ss::models::membership_model::{Membership, NewMembership, UpdatedMembership};
+use spbstu_ss::models::auth_model::{Claims, LoginRequest, LoginResponse, RegistrationRequest, RegistrationResponse};
 
 #[get("/hello/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {
     format!("Hello? {} year old named {}!", age, name)
 }
 
-#[post("/login", format = "json", data = "<name>")]
-pub fn login(name: Json<LoginRequest>) -> Result<Json<LoginResponse>, NotFound<String>> {
+#[post("/login", format = "json", data = "<data>")]
+pub fn login(data: Json<LoginRequest>) -> Result<Json<LoginResponse>, Status> {
     let controller: UsersController = UsersController();
+    let user_check = conntroller.check_password(data.name, data.password);
+    if !user_check {
+        return Err(Status::Unauthorized);
+    }
     let user_res = controller.get_user_by_name(name.into_inner().name.clone());
     return match user_res {
         Ok(user) => Ok(Json(LoginResponse {
             token: auth::create_jwt(user.user_id, user.name),
+            user: User
         })),
         Err(err) => {
             if err.eq(&Error::NotFound) {
-                Err(NotFound(err.to_string()))
-            } else {
-                panic!("{}", err.to_string())
+                return Err(Status::Unauthorized);
             }
+            panic!("{}", err.to_string())
         }
     };
 }
@@ -84,23 +88,24 @@ fn private_endpoint(user: UserFromToken) -> String {
     return format!("{}, {}", user.0.user_id.to_string(), user.0.name);
 }
 
-// #[post("/registration", format="json", data="<name>")]
-// pub fn login(data: Json<Login>) -> Result<LoginResponse, String> {
-//     let controller : UsersController = UsersController();
-//     return Json(controller.get_user(data.name));
-// }
-
 #[get("/users")]
 fn get_users() -> Json<Vec<User>> {
     let controller: UsersController = UsersController();
     return Json(controller.get_users());
 }
 
-
 #[post("/users", format = "json", data = "<data>")]
-fn post_users(data: Json<NewUser>) -> Json<User> {
-    let controller: UsersController = UsersController();
-    return Json(controller.create_user(data.into_inner()));
+fn post_users(data: Json<NewUser>) -> Result<Json<User>, Status> {
+    let controller = UsersController();
+    match controller.get_user_by_name(data.into_inner().name) {
+        Ok(_t) => return Err(Status::Conflict),
+        Err(e) => {
+            if err.eq(&Error::NotFound) {
+                return Ok(Json(controller.create_user(data.into_inner())));
+            }
+            panic!("{}", err.to_string())
+        }
+    }
 }
 
 #[get("/users/<user_id>")]
@@ -118,15 +123,17 @@ fn get_user(user_id: i32) -> Result<Json<User>, NotFound<String>> {
     };
 }
 
-
 #[put("/users/<user_id>", format = "json", data = "<data>")]
-fn put_user(user_id: i32, data: Json<UpdatedUser>) -> Result<Json<User>, NotFound<String>> {
+fn put_user(user_id: i32, data: Json<UpdatedUser>, user: UserFromToken) -> Result<Json<User>, Status> {
     let controller: UsersController = UsersController();
+    if user.user_id != user_id {
+        return Err(Status::Unauthorized);
+    }
     return match controller.update_user(user_id, data.into_inner()) {
         Ok(user) => Ok(Json(user)),
         Err(err) => {
             if err.eq(&Error::NotFound) {
-                Err(NotFound(err.to_string()))
+                Err(Status::NotFound)
             } else {
                 panic!("{}", err.to_string())
             }
@@ -135,17 +142,20 @@ fn put_user(user_id: i32, data: Json<UpdatedUser>) -> Result<Json<User>, NotFoun
 }
 
 #[delete("/users/<user_id>")]
-fn delete_user(user_id: i32) -> Result<Status, NotFound<String>> {
+fn delete_user(user_id: i32, user: UserFromToken) -> Result<Status, Status> {
+    if user.user_id != user_id {
+        return Err(Status::Unauthorized);
+    }
     let controller: UsersController = UsersController();
     return match controller.delete_user(user_id) {
         Ok(_res) => {
             if _res == 0 {
-                Err(NotFound("Not found".to_string()))
+                Err(Status::NotFound)
             } else {
                 Ok(Status::Ok)
             }
-        }
-        Err(err) => panic!("{}", err.to_string()),
+        },
+        Err(err) => panic!("{}", err.to_string())
     };
 }
 

@@ -13,6 +13,7 @@ pub trait UsersControllerTraits {
     fn get_user_by_name(&self, user_name: String) -> Result<User, Error>;
     fn update_user(&self, user_id: i32, data: UpdatedUser) -> Result<User, Error>;
     fn delete_user(&self, user_id: i32) -> Result<usize, Error>;
+    fn check_password(&self, _name: i32, _password: String) -> bool;
 }
 
 impl UsersControllerTraits for UsersController {
@@ -56,5 +57,14 @@ impl UsersControllerTraits for UsersController {
         use crate::schema::users::dsl::*;
         let mut connection = establish_connection();
         return diesel::delete(users.filter(user_id.eq(_user_id))).execute(&mut connection);
+    }
+
+    fn check_password(&self, _name: i32, _password: String) -> bool {
+        use crate::schema::users::dsl::*;
+        let mut connection = establish_connection();
+        return users
+            .filter(mane.eq(_name))
+            .filter(password.eq(_password))
+            .first::<User>(&mut connection).is_ok();
     }
 }

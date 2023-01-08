@@ -13,7 +13,8 @@ pub struct User {
 #[derive(Insertable, Deserialize)]
 #[diesel(table_name = users)]
 pub struct NewUser {
-    pub name: String
+    pub name: String,
+    pub password: String
 }
 #[derive(AsChangeset, Deserialize)]
 #[diesel(table_name = users)]
