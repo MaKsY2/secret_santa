@@ -18,18 +18,35 @@ impl MembershipsControllerTraits for MembershipsController {
     fn get_memberships(&self, _group_id: Option<i32>, _user_id: Option<i32>) -> Vec<Membership> {
         use crate::schema::memberships::dsl::*;
         let mut connection = establish_connection();
-        let mut query = memberships;
-        if _group_id.is_some() {
-            query = query.filter(group_id.eq(_group_id));
+        if _group_id.is_some() && _user_id.is_some() {
+            return match memberships
+                .filter(group_id.eq(_group_id.unwrap()))
+                .filter(user_id.eq(_user_id.unwrap()))
+                .load::<Membership>(&mut connection) {
+                Ok(res) => res,
+                Err(_res) => Vec::new()
+            }
+        } else if _group_id.is_some() {
+            return match memberships
+                .filter(group_id.eq(_group_id.unwrap()))
+                .load::<Membership>(&mut connection) {
+                Ok(res) => res,
+                Err(_res) => Vec::new()
+            }
+        } else if _user_id.is_some() {
+            return match memberships
+                .filter(user_id.eq(_user_id.unwrap()))
+                .load::<Membership>(&mut connection) {
+                Ok(res) => res,
+                Err(_res) => Vec::new()
+            }
+        } else {
+            return match memberships
+                .load::<Membership>(&mut connection) {
+                Ok(res) => res,
+                Err(_res) => Vec::new()
+            }
         }
-        if _user_id.is_some() {
-            query = query.filter(user_id.eq(_user_id));
-        }
-        return match query
-            .load::<Membership>(&mut connection) {
-            Ok(res) => res,
-            Err(_res) => Vec::new()
-        };
     }
     fn create_membership(&self, data: NewMembership) -> Membership {
         use crate::schema::memberships;

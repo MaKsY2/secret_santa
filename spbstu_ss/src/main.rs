@@ -96,22 +96,11 @@ fn get_users() -> Json<Vec<User>> {
     return Json(controller.get_users());
 }
 
-#[get("/groups")]
-fn get_groups() -> Json<Vec<Group>> {
-    let controller : GroupsController = GroupsController();
-    return Json(controller.get_groups());
-}
 
 #[post("/users", format = "json", data = "<data>")]
 fn post_users(data: Json<NewUser>) -> Json<User> {
     let controller: UsersController = UsersController();
     return Json(controller.create_user(data.into_inner()));
-}
-
-#[post("/groups", format = "json", data = "<data>")]
-fn post_groups(data: Json<NewGroup>) -> Json<Group> {
-    let controller : GroupsController = GroupsController();
-    return Json(controller.create_group(data.into_inner()));
 }
 
 #[get("/users/<user_id>")]
@@ -129,15 +118,6 @@ fn get_user(user_id: i32) -> Result<Json<User>, NotFound<String>> {
     };
 }
 
-#[get("/groups/<group_id>")]
-fn get_group(group_id: i32) -> Result<Json<Group>, NotFound<String>> {
-    let controller : GroupsController = GroupsController();
-    return match controller.get_group(group_id) {
-        Ok(group) => Ok(Json(group)),
-        Err(err) => if err.eq(&Error::NotFound)
-        { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
-    };
-}
 
 #[put("/users/<user_id>", format = "json", data = "<data>")]
 fn put_user(user_id: i32, data: Json<UpdatedUser>) -> Result<Json<User>, NotFound<String>> {
@@ -178,14 +158,13 @@ fn get_memberships(group_id: Option<i32>, user_id: Option<i32>) -> Json<Vec<Memb
 #[put("/memberships?<group_id>&<user_id>", format = "json", data = "<data>")]
 fn put_membership(group_id: i32, user_id: i32, data: Json<UpdatedMembership>) -> Result<Json<Membership>, NotFound<String>> {
     let controller : MembershipsController = MembershipsController();
-    return match controller.update_membership(group_id, user_id) {
+    return match controller.update_membership(group_id, user_id, data.into_inner()) {
         Ok(membership) => Ok(Json(membership)),
         Err(err) => if err.eq(&Error::NotFound)
         { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
     }
 }
 
-<<<<<<< HEAD
 #[post("/memberships", format = "json", data = "<data>")]
 fn post_membership(data: Json<NewMembership>) -> Json<Membership> {
     let controller : MembershipsController = MembershipsController();
@@ -194,11 +173,34 @@ fn post_membership(data: Json<NewMembership>) -> Json<Membership> {
 
 #[delete("/memberships?<group_id>&<user_id>")]
 fn delete_membership(group_id: i32, user_id: i32) -> Result<Status, NotFound<String>> {
-    let controller : MembershipsController = MembershipsController();
+    let controller: MembershipsController = MembershipsController();
     return match controller.delete_membership(group_id, user_id) {
-=======
+        Ok(_res) => if _res == 0 { Err(NotFound("Not found".to_string())) } else { Ok(Status::Ok) },
+        Err(err) => panic!("{}", err.to_string())
+    };
+}
+
+#[get("/groups")]
+fn get_groups() -> Json<Vec<Group>> {
+    let controller : GroupsController = GroupsController();
+    return Json(controller.get_groups());
+}
+#[post("/groups", format = "json", data = "<data>")]
+fn post_groups(data: Json<NewGroup>) -> Json<Group> {
+    let controller : GroupsController = GroupsController();
+    return Json(controller.create_group(data.into_inner()));
+}
+#[get("/groups/<group_id>")]
+fn get_group(group_id: i32) -> Result<Json<Group>, NotFound<String>> {
+    let controller : GroupsController = GroupsController();
+    return match controller.get_group(group_id) {
+        Ok(group) => Ok(Json(group)),
+        Err(err) => if err.eq(&Error::NotFound)
+        { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
+    };
+}
 #[put("/groups/<group_id>", format = "json", data = "<data>")]
-fn put_group(group_id: i32, data: Json<UpdatedUser>) -> Result<Json<User>, NotFound<String>> {
+fn put_group(group_id: i32, data: Json<UpdatedGroup>) -> Result<Json<Group>, NotFound<String>> {
     let controller : GroupsController = GroupsController();
     return match controller.update_group(group_id, data.into_inner()) {
         Ok(group) => Ok(Json(group)),
@@ -207,21 +209,11 @@ fn put_group(group_id: i32, data: Json<UpdatedUser>) -> Result<Json<User>, NotFo
     }
 }
 
-#[delete("/users/<user_id>")]
-fn delete_user(user_id: i32) -> Result<Status, NotFound<String>> {
-    let controller : UsersController = UsersController();
-    return match controller.delete_user(user_id) {
->>>>>>> 787fd4f (added some work with groups in main.rs)
-        Ok(_res) => if _res == 0 {Err(NotFound("Not found".to_string()))} else {Ok(Status::Ok)},
-        Err(err) => panic!("{}", err.to_string())
-    };
-}
-
 #[delete("/groups/<group_id>")]
 fn delete_group(group_id: i32) -> Result<Status, Status> {
     let controller : GroupsController = GroupsController();
     return match controller.delete_group(group_id) {
-        Ok(_res) => if _res == 0 {Err(NotFound("Not found".to_string()))} else {Ok(Status::Ok)},
+        Ok(_res) => if _res == 0 {Err(Status::NotFound)} else {Ok(Status::Ok)},
         Err(err) => panic!("{}", err.to_string())
     };
 }
