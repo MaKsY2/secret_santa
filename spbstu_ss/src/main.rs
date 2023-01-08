@@ -179,7 +179,7 @@ fn put_membership(group_id: i32, user_id: i32, data: Json<UpdatedMembership>, us
         Ok(m) => if m.role != "admin" { return Err(Status::Unauthorized); }
     }
     if user.0.user_id == user_id {
-        let memes = controller.get_memberships(Some(group_id));
+        let memes = controller.get_memberships(Some(group_id), None);
         let mut f = false;
         for meme in memes {
             if meme.user_id != user.0.user_id && meme.role == "admin" {
@@ -201,8 +201,8 @@ fn post_membership(data_raw: Json<NewMembership>, user: UserFromToken) -> Result
     let groups_ctrl = GroupsController();
     let group = match groups_ctrl.get_group(data.group_id) {
         Ok(g) => g,
-        Err(e) => if err.eq(&Error::NotFound)
-        { Err(Status::NotFound) } else { panic!("{}", err.to_string()) }
+        Err(e) => if e.eq(&Error::NotFound)
+        { return Err(Status::NotFound) } else { panic!("{}", e.to_string()) }
     };
     if group.status == "closed" {
         return Err(Status::Conflict);
@@ -219,8 +219,8 @@ fn delete_membership(group_id: i32, user_id: i32, user: UserFromToken) -> Result
     let groups_ctrl = GroupsController();
     let group = match groups_ctrl.get_group(group_id) {
         Ok(g) => g,
-        Err(e) => if err.eq(&Error::NotFound)
-        { Err(Status::NotFound) } else { panic!("{}", err.to_string()) }
+        Err(e) => if e.eq(&Error::NotFound)
+        { return Err(Status::NotFound) } else { panic!("{}", e.to_string()) }
     };
     if group.status == "closed" {
         return Err(Status::Conflict);
@@ -238,7 +238,7 @@ fn delete_membership(group_id: i32, user_id: i32, user: UserFromToken) -> Result
     if user.0.user_id != user_id {
         return Err(Status::Unauthorized);
     }
-    let memes = controller.get_memberships(Some(group_id));
+    let memes = controller.get_memberships(Some(group_id), None);
     let mut f = false;
     for meme in memes {
         if meme.user_id != user.0.user_id && meme.role == "admin" {
