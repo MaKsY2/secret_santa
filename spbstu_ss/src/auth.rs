@@ -4,11 +4,11 @@ const JWT_ERROR: &str = "Error in JWT";
 use jsonwebtoken::errors::Error;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
-use spbstu_ss::models::Claims;
+use spbstu_ss::models::auth_model::Claims;
 
 use chrono::Utc;
 
-pub fn create_jwt(uid: i32, name: String) -> String {
+pub fn create_jwt(uid: i32, name: &String) -> String {
     let expiration = Utc::now()
         .checked_add_signed(chrono::Duration::seconds(60))
         .expect("valid timestamp")

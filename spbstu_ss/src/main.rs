@@ -18,25 +18,26 @@ use spbstu_ss::controllers::groups_controller::*;
 use spbstu_ss::models::user_model::{NewUser, UpdatedUser, User};
 use spbstu_ss::models::group_model::{Group, NewGroup, UpdatedGroup};
 use spbstu_ss::models::membership_model::{Membership, NewMembership, UpdatedMembership};
-use spbstu_ss::models::auth_model::{Claims, LoginRequest, LoginResponse, RegistrationRequest, RegistrationResponse};
+use spbstu_ss::models::auth_model::{Claims, LoginRequest, LoginResponse};
 
 #[get("/hello/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {
     format!("Hello? {} year old named {}!", age, name)
 }
 
-#[post("/login", format = "json", data = "<data>")]
-pub fn login(data: Json<LoginRequest>) -> Result<Json<LoginResponse>, Status> {
+#[post("/login", format = "json", data = "<data_raw>")]
+pub fn login(data_raw: Json<LoginRequest>) -> Result<Json<LoginResponse>, Status> {
     let controller: UsersController = UsersController();
-    let user_check = conntroller.check_password(data.name, data.password);
+    let data = data_raw.into_inner();
+    let user_check = controller.check_password(&data.name, &data.password);
     if !user_check {
         return Err(Status::Unauthorized);
     }
-    let user_res = controller.get_user_by_name(name.into_inner().name.clone());
+    let user_res = controller.get_user_by_name(&data.name);
     return match user_res {
         Ok(user) => Ok(Json(LoginResponse {
-            token: auth::create_jwt(user.user_id, user.name),
-            user: User
+            token: auth::create_jwt(user.user_id, &user.name),
+            user: user
         })),
         Err(err) => {
             if err.eq(&Error::NotFound) {
@@ -94,16 +95,18 @@ fn get_users() -> Json<Vec<User>> {
     return Json(controller.get_users());
 }
 
-#[post("/users", format = "json", data = "<data>")]
-fn post_users(data: Json<NewUser>) -> Result<Json<User>, Status> {
+#[post("/users", format = "json", data = "<data_raw>")]
+fn post_users(data_raw: Json<NewUser>) -> Result<Json<User>, Status> {
     let controller = UsersController();
-    match controller.get_user_by_name(data.into_inner().name) {
+    let data = data_raw.into_inner();
+
+    match controller.get_user_by_name(&data.name) {
         Ok(_t) => return Err(Status::Conflict),
         Err(e) => {
-            if err.eq(&Error::NotFound) {
-                return Ok(Json(controller.create_user(data.into_inner())));
+            if e.eq(&Error::NotFound) {
+                return Ok(Json(controller.create_user(data)));
             }
-            panic!("{}", err.to_string())
+            panic!("{}", e.to_string())
         }
     }
 }
@@ -171,8 +174,8 @@ fn put_membership(group_id: i32, user_id: i32, data: Json<UpdatedMembership>, us
     let controller : MembershipsController = MembershipsController();
     let my_membership = controller.get_membership(group_id, user.0.user_id);
     match my_membership {
-        Err(e) => if err.eq(&Error::NotFound)
-        { return Err(Status::Unauthorized) } else { panic!("{}", err.to_string()) },
+        Err(e) => if e.eq(&Error::NotFound)
+        { return Err(Status::Unauthorized) } else { panic!("{}", e.to_string()) },
         Ok(m) => if m.role != "admin" { return Err(Status::Unauthorized); }
     }
     return match controller.update_membership(group_id, user_id, data.into_inner()) {
@@ -182,13 +185,14 @@ fn put_membership(group_id: i32, user_id: i32, data: Json<UpdatedMembership>, us
     }
 }
 
-#[post("/memberships", format = "json", data = "<data>")]
-fn post_membership(data: Json<NewMembership>, user: UserFromToken) -> Result<Json<Membership>, Status> {
-    if user.0.user_id != data.into_inner().user_id {
+#[post("/memberships", format = "json", data = "<data_raw>")]
+fn post_membership(data_raw: Json<NewMembership>, user: UserFromToken) -> Result<Json<Membership>, Status> {
+    let data = data_raw.into_inner();
+    if user.0.user_id != data.user_id {
         return Err(Status::Unauthorized);
     }
     let controller : MembershipsController = MembershipsController();
-    return Ok(Json(controller.create_membership(data.into_inner())));
+    return Ok(Json(controller.create_membership(data)));
 }
 
 #[delete("/memberships?<group_id>&<user_id>")]
@@ -197,13 +201,13 @@ fn delete_membership(group_id: i32, user_id: i32, user: UserFromToken) -> Result
     let my_membership = controller.get_membership(group_id, user.0.user_id);
     match my_membership {
         Ok(m) => {
-            if user.0.user_id != data.into_inner().user_id && m.role != "admin" {
+            if user.0.user_id != user_id && m.role != "admin" {
                 return Err(Status::Unauthorized);
             }
         },
         Err(e) => return Err(Status::Unauthorized)
     }
-    if user.0.user_id != data.into_inner().user_id {
+    if user.0.user_id != user_id {
         return Err(Status::Unauthorized);
     }
     return match controller.delete_membership(group_id, user_id) {

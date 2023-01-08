@@ -5,10 +5,17 @@ use serde_derive::{Serialize, Deserialize};
 use crate::schema::users;
 
 #[derive(Queryable, Serialize)]
-#[diesel(table_name = users)]
+#[diesel(table_name = users_wo_passwords)]
 pub struct User {
     pub user_id: i32,
     pub name: String
+}
+#[derive(Queryable, Serialize)]
+#[diesel(table_name = users_wo_passwords)]
+pub struct UserWithPassword {
+    pub user_id: i32,
+    pub name: String,
+    pub password: String
 }
 #[derive(Insertable, Deserialize)]
 #[diesel(table_name = users)]

@@ -28,6 +28,14 @@ diesel::table! {
     users (user_id) {
         user_id -> Int4,
         name -> Varchar,
+        password -> Varchar,
+    }
+}
+
+diesel::table! {
+    users_wo_passwords (user_id) {
+        user_id -> Int4,
+        name -> Varchar,
     }
 }
 

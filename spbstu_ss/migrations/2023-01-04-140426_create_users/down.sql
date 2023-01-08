@@ -1,1 +1,2 @@
 DROP TABLE IF EXISTS users CASCADE;
+DROP VIEW IF EXISTS users_wo_passwords;
