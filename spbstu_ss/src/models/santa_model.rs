@@ -1,10 +1,10 @@
 use diesel::{Queryable, Insertable};
 
-use serde_derive::{Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 use crate::schema::santas;
 
-#[derive(Queryable, Insertable, Deserialize)]
+#[derive(Queryable, Insertable, Deserialize, Serialize)]
 #[diesel(table_name = santas)]
 pub struct Santa {
     pub(crate) group_id: i32,

@@ -6,19 +6,20 @@ mod auth;
 use diesel::result::Error;
 use rocket::http::Status;
 use rocket::request::FromRequest;
-use rocket::response::status::{NotFound, Unauthorized};
+use rocket::response::status::{NotFound};
 use rocket::*;
 use rocket_contrib::json::Json;
 use spbstu_ss::controllers::memberships_controller::{MembershipsController, MembershipsControllerTraits};
-use std::convert::Infallible;
 
 use auth::*;
 use spbstu_ss::controllers::users_controller::*;
 use spbstu_ss::controllers::groups_controller::*;
+use spbstu_ss::controllers::santas_controller::{SantasController, SantasControllerTraits};
 use spbstu_ss::models::user_model::{NewUser, UpdatedUser, User};
 use spbstu_ss::models::group_model::{Group, NewGroup, UpdatedGroup};
 use spbstu_ss::models::membership_model::{Membership, NewMembership, UpdatedMembership};
-use spbstu_ss::models::auth_model::{Claims, LoginRequest, LoginResponse};
+use spbstu_ss::models::santa_model::Santa;
+use spbstu_ss::models::auth_model::{LoginRequest, LoginResponse};
 
 #[get("/hello/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {
@@ -112,13 +113,13 @@ fn post_users(data_raw: Json<NewUser>) -> Result<Json<User>, Status> {
 }
 
 #[get("/users/<user_id>")]
-fn get_user(user_id: i32) -> Result<Json<User>, NotFound<String>> {
+fn get_user(user_id: i32) -> Result<Json<User>, Status> {
     let controller: UsersController = UsersController();
     return match controller.get_user(user_id) {
         Ok(user) => Ok(Json(user)),
         Err(err) => {
             if err.eq(&Error::NotFound) {
-                Err(NotFound(err.to_string()))
+                Err(Status::NotFound)
             } else {
                 panic!("{}", err.to_string())
             }
@@ -233,7 +234,7 @@ fn delete_membership(group_id: i32, user_id: i32, user: UserFromToken) -> Result
                 return Err(Status::Unauthorized);
             }
         },
-        Err(e) => return Err(Status::Unauthorized)
+        Err(_e) => return Err(Status::Unauthorized)
     }
     if user.0.user_id != user_id {
         return Err(Status::Unauthorized);
@@ -287,6 +288,49 @@ fn delete_group(group_id: i32) -> Result<Status, Status> {
     return match controller.delete_group(group_id) {
         Ok(_res) => if _res == 0 {Err(Status::NotFound)} else {Ok(Status::Ok)},
         Err(err) => panic!("{}", err.to_string())
+    };
+}
+
+#[post("/santas?<group_id>")]
+fn post_santas(group_id: i32, user: UserFromToken) -> Result<Status, Status> {
+    let groups_controller = GroupsController();
+    let _group = match groups_controller
+            .get_group(group_id) {
+        Ok(g) => g,
+        Err(_e) => return Err(Status::NotFound)
+    };
+    let memberships_controller = MembershipsController();
+    let meme = match memberships_controller
+            .get_membership(group_id, user.0.user_id) {
+        Ok(m) => m,
+        Err(_e) => return Err(Status::Unauthorized)
+    };
+    if meme.role != "admin" {return Err(Status::Unauthorized);}
+    let santas_controller = SantasController();
+    return match santas_controller.generate_santas(group_id) {
+        Ok(_s) => {
+            match groups_controller.close_group(group_id) {
+                Ok(_g) => Ok(Status::Ok),
+                Err(e) => panic!("{}", e.to_string())
+            }
+        },
+        Err(e) => panic!("{}", e.to_string())
+    };
+}
+
+#[get("/santas?<group_id>&<user_id>")]
+fn get_santa(group_id: i32, user_id: i32, user: UserFromToken) -> Result<Json<Santa>, Status> {
+    if user_id != user.0.user_id {return Err(Status::Unauthorized)}
+    let memberships_controller = MembershipsController();
+    let _meme = match memberships_controller
+        .get_membership(group_id, user_id) {
+        Ok(m) => m,
+        Err(_e) => return Err(Status::Unauthorized)
+    };
+    let santas_controller = SantasController();
+    return match santas_controller.get_santa(group_id, user_id) {
+        Ok(s) => Ok(Json(s)),
+        Err(_e) => Err(Status::Unauthorized)
     };
 }
 

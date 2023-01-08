@@ -1,5 +1,4 @@
 const JWT_SECRET: &[u8] = b"secret";
-const JWT_ERROR: &str = "Error in JWT";
 
 use jsonwebtoken::errors::Error;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};

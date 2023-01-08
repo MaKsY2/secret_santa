@@ -21,3 +21,9 @@ pub struct NewGroup {
 pub struct UpdatedGroup {
     pub name: String
 }
+
+#[derive(AsChangeset)]
+#[diesel(table_name = groups)]
+pub struct CloseGroup {
+    pub status: String
+}
