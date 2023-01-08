@@ -1,0 +1,13 @@
+/Users/maksim/Documents/Codes/Cargo/secret_santa/spbstu_ss_client/target/debug/deps/tracing-4e51bf71ea4d31b6.rmeta: /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/lib.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/macros.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/dispatcher.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/field.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/instrument.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/level_filters.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/span.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/stdlib.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/subscriber.rs
+
+/Users/maksim/Documents/Codes/Cargo/secret_santa/spbstu_ss_client/target/debug/deps/tracing-4e51bf71ea4d31b6.d: /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/lib.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/macros.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/dispatcher.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/field.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/instrument.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/level_filters.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/span.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/stdlib.rs /Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/subscriber.rs
+
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/lib.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/macros.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/dispatcher.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/field.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/instrument.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/level_filters.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/span.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/stdlib.rs:
+/Users/maksim/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.37/src/subscriber.rs:

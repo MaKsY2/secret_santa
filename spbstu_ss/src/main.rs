@@ -4,13 +4,16 @@ mod auth;
 
 use diesel::result::Error;
 use rocket::http::Status;
-use rocket::response::status::NotFound;
+use rocket::request::FromRequest;
+use rocket::response::status::{NotFound, Unauthorized};
 use rocket::*;
 use rocket_contrib::json::Json;
+use std::convert::Infallible;
 
 use auth::*;
 use spbstu_ss::controllers::users_controller::*;
-use spbstu_ss::models::{LoginRequest, LoginResponse, NewUser, UpdatedUser, User};
+use spbstu_ss::models::user_model::{NewUser, UpdatedUser, User};
+use spbstu_ss::models::{Claims, LoginRequest, LoginResponse};
 
 #[get("/hello/<name>/<age>")]
 fn hello(name: String, age: u8) -> String {
@@ -18,14 +21,13 @@ fn hello(name: String, age: u8) -> String {
 }
 
 #[post("/login", format = "json", data = "<name>")]
-pub fn login(
-    name: Json<LoginRequest>,
-) -> std::result::Result<Json<LoginResponse>, NotFound<String>> {
+pub fn login(name: Json<LoginRequest>) -> Result<Json<LoginResponse>, NotFound<String>> {
     let controller: UsersController = UsersController();
-    let user = controller.get_user_by_name(name.into_inner().name.clone());
-    //println!("{}", name.into_inner().name.clone());
-    match user {
-        Ok(t) => auth::create_jwt(t.user_id, t.name),
+    let user_res = controller.get_user_by_name(name.into_inner().name.clone());
+    return match user_res {
+        Ok(user) => Ok(Json(LoginResponse {
+            token: auth::create_jwt(user.user_id, user.name),
+        })),
         Err(err) => {
             if err.eq(&Error::NotFound) {
                 Err(NotFound(err.to_string()))
@@ -33,7 +35,48 @@ pub fn login(
                 panic!("{}", err.to_string())
             }
         }
+    };
+}
+
+struct UserFromToken(User);
+impl<'a, 'r> FromRequest<'a, 'r> for UserFromToken {
+    type Error = String;
+
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+        let token = request.headers().get_one("token");
+        match token {
+            Some(token) => match extract_jwt(token.to_string()) {
+                Ok(claims) => {
+                    let controller = UsersController();
+                    match controller.get_user(claims.uid) {
+                        Ok(user) => Outcome::Success(UserFromToken(user)),
+                        // no user
+                        Err(e) => {
+                            if e.eq(&Error::NotFound) {
+                                // Outcome::Failure((Status::Unauthorized, Unauthorized::<String>(Some("user from token does not exist".to_string()))))
+                                Outcome::Failure((
+                                    Status::Unauthorized,
+                                    "user from token does not exist".to_string(),
+                                ))
+                            } else {
+                                panic!("{}", e.to_string())
+                            }
+                        }
+                    }
+                }
+                // invalid token
+                // Err(e) => Outcome::Failure((Status::Unauthorized, "invalid token".to_string()))
+                Err(e) => panic!("{}", e.to_string()),
+            },
+            // token does not exist
+            None => Outcome::Failure((Status::Unauthorized, "token does not exist".to_string())), // None => Outcome::Failure((Status::Unauthorized))
+        }
     }
+}
+
+#[get("/some_private_endpoint")]
+fn private_endpoint(user: UserFromToken) -> String {
+    return format!("{}, {}", user.0.user_id.to_string(), user.0.name);
 }
 
 // #[post("/registration", format="json", data="<name>")]
@@ -113,7 +156,8 @@ fn main() {
                 post_users,
                 get_user,
                 put_user,
-                delete_user
+                delete_user,
+                private_endpoint
             ],
         )
         .launch();

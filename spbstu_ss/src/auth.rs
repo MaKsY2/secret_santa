@@ -1,40 +1,35 @@
 const JWT_SECRET: &[u8] = b"secret";
 const JWT_ERROR: &str = "Error in JWT";
 
-use diesel::result::Error;
+use jsonwebtoken::errors::Error;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use rocket::response::status::NotFound;
-use rocket_contrib::json::Json;
-use warp::{
-    filters::header::headers_cloned,
-    http::header::{HeaderMap, HeaderValue, AUTHORIZATION},
-    reject, Filter, Rejection,
-};
 
-use spbstu_ss::models::{Claims, LoginResponse};
+use spbstu_ss::models::Claims;
 
-pub fn create_jwt(
-    uid: i32,
-    name: String,
-) -> std::result::Result<Json<LoginResponse>, NotFound<String>> {
+use chrono::Utc;
+
+pub fn create_jwt(uid: i32, name: String) -> String {
+    let expiration = Utc::now()
+        .checked_add_signed(chrono::Duration::seconds(60))
+        .expect("valid timestamp")
+        .timestamp();
+
     let claims = Claims {
         name: name.to_string(),
         uid: uid.to_owned(),
+        exp: expiration,
     };
     let header = Header::new(Algorithm::HS512);
-    match encode(&header, &claims, &EncodingKey::from_secret(JWT_SECRET)) {
-        Ok(t) => Ok(Json(LoginResponse { token: t })),
-        Err(err) => {
-            panic!("{}", err.to_string())
-        }
-    }
+    return encode(&header, &claims, &EncodingKey::from_secret(JWT_SECRET)).unwrap();
 }
 
-pub fn authorise((name, headers): (String, HeaderMap<HeaderValue>)) -> Result<String> {}
-
-pub fn extract_jwt(headers: &HeaderMap<HeaderValue>) -> Result<String> {
-    let header = match headers.get(AUTHORIZATION) {
-        Some(v) => v,
-        None => return Err(Error::NoAuthHeaderError),
+pub fn extract_jwt(token: String) -> Result<Claims, Error> {
+    return match decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret(JWT_SECRET),
+        &Validation::new(Algorithm::HS512),
+    ) {
+        Ok(token_data) => Ok(token_data.claims),
+        Err(err) => Err(err),
     };
 }

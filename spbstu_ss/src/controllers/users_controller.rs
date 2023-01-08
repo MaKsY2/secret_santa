@@ -1,8 +1,8 @@
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::models::*;
 use crate::establish_connection;
+use crate::models::user_model::*;
 
 pub struct UsersController();
 
@@ -20,16 +20,16 @@ impl UsersControllerTraits for UsersController {
         use crate::schema::users::dsl::*;
         let mut connection = establish_connection();
         return users
-        .load::<User>(&mut connection)
-        .expect("Error loading users");
+            .load::<User>(&mut connection)
+            .expect("Error loading users");
     }
     fn create_user(&self, data: NewUser) -> User {
         use crate::schema::users;
         let mut connection = establish_connection();
         return diesel::insert_into(users::table)
-        .values(&data)
-        .get_result::<User>(&mut connection)
-        .expect("Error saving new user")
+            .values(&data)
+            .get_result::<User>(&mut connection)
+            .expect("Error saving new user");
     }
     fn get_user(&self, _user_id: i32) -> Result<User, Error> {
         use crate::schema::users::dsl::*;
@@ -52,10 +52,9 @@ impl UsersControllerTraits for UsersController {
             .set(&data)
             .get_result::<User>(&mut connection);
     }
-    fn delete_user(&self, _user_id: i32) -> Result<usize, Error>{
+    fn delete_user(&self, _user_id: i32) -> Result<usize, Error> {
         use crate::schema::users::dsl::*;
         let mut connection = establish_connection();
-        return diesel::delete(users.filter(user_id.eq(_user_id)))
-            .execute(&mut connection);
+        return diesel::delete(users.filter(user_id.eq(_user_id))).execute(&mut connection);
     }
 }
