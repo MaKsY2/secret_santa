@@ -21,10 +21,6 @@ use spbstu_ss::models::membership_model::{Membership, NewMembership, UpdatedMemb
 use spbstu_ss::models::santa_model::Santa;
 use spbstu_ss::models::auth_model::{LoginRequest, LoginResponse};
 
-#[get("/hello/<name>/<age>")]
-fn hello(name: String, age: u8) -> String {
-    format!("Hello? {} year old named {}!", age, name)
-}
 
 #[post("/login", format = "json", data = "<data_raw>")]
 pub fn login(data_raw: Json<LoginRequest>) -> Result<Json<LoginResponse>, Status> {
@@ -83,11 +79,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserFromToken {
             None => Outcome::Failure((Status::Unauthorized, "token does not exist".to_string())), // None => Outcome::Failure((Status::Unauthorized))
         }
     }
-}
-
-#[get("/some_private_endpoint")]
-fn private_endpoint(user: UserFromToken) -> String {
-    return format!("{}, {}", user.0.user_id.to_string(), user.0.name);
 }
 
 #[get("/users")]
@@ -259,9 +250,19 @@ fn get_groups() -> Json<Vec<Group>> {
     return Json(controller.get_groups());
 }
 #[post("/groups", format = "json", data = "<data>")]
-fn post_groups(data: Json<NewGroup>) -> Json<Group> {
+fn post_groups(data: Json<NewGroup>, user: UserFromToken) -> Json<Group> {
     let controller : GroupsController = GroupsController();
-    return Json(controller.create_group(data.into_inner()));
+    let memberships_controller = MembershipsController();
+    let group = controller.create_group(data.into_inner());
+    let _meme = memberships_controller.create_membership(NewMembership{
+        user_id: user.0.user_id,
+        group_id: group.group_id
+    });
+    let _upd = memberships_controller
+        .update_membership(group.group_id, user.0.user_id, UpdatedMembership{
+            role: "admin".to_string()
+        });
+    return Json(group);
 }
 #[get("/groups/<group_id>")]
 fn get_group(group_id: i32) -> Result<Json<Group>, NotFound<String>> {
@@ -273,17 +274,39 @@ fn get_group(group_id: i32) -> Result<Json<Group>, NotFound<String>> {
     };
 }
 #[put("/groups/<group_id>", format = "json", data = "<data>")]
-fn put_group(group_id: i32, data: Json<UpdatedGroup>) -> Result<Json<Group>, NotFound<String>> {
+fn put_group(group_id: i32, data: Json<UpdatedGroup>, user: UserFromToken) -> Result<Json<Group>, Status> {
+    let memberships_controller = MembershipsController();
+    let my_membership = memberships_controller.get_membership(group_id, user.0.user_id);
+    match my_membership {
+        Err(e) => if e.eq(&Error::NotFound)
+        { return Err(Status::Unauthorized) } else { panic!("{}", e.to_string()) },
+        Ok(m) => if m.role != "admin" { return Err(Status::Unauthorized); }
+    }
+    let memes = memberships_controller.get_memberships(Some(group_id), None);
+    let mut f = false;
+    for meme in memes {
+        if meme.user_id != user.0.user_id && meme.role == "admin" {
+            f = true;
+        }
+    }
+    if !f {return Err(Status::Conflict);}
     let controller : GroupsController = GroupsController();
     return match controller.update_group(group_id, data.into_inner()) {
         Ok(group) => Ok(Json(group)),
         Err(err) => if err.eq(&Error::NotFound)
-        { Err(NotFound(err.to_string())) } else { panic!("{}", err.to_string()) }
+        { Err(Status::Unauthorized) } else { panic!("{}", err.to_string()) }
     }
 }
 
 #[delete("/groups/<group_id>")]
-fn delete_group(group_id: i32) -> Result<Status, Status> {
+fn delete_group(group_id: i32, user: UserFromToken) -> Result<Status, Status> {
+    let memberships_controller = MembershipsController();
+    let my_membership = memberships_controller.get_membership(group_id, user.0.user_id);
+    match my_membership {
+        Err(e) => if e.eq(&Error::NotFound)
+        { return Err(Status::Unauthorized) } else { panic!("{}", e.to_string()) },
+        Ok(m) => if m.role != "admin" { return Err(Status::Unauthorized); }
+    }
     let controller : GroupsController = GroupsController();
     return match controller.delete_group(group_id) {
         Ok(_res) => if _res == 0 {Err(Status::NotFound)} else {Ok(Status::Ok)},
@@ -339,14 +362,20 @@ fn main() {
         .mount(
             "/",
             routes![
-                hello,
                 login,
                 get_users,
                 post_users,
                 get_user,
                 put_user,
                 delete_user,
-                private_endpoint
+                get_memberships,
+                put_membership,
+                delete_membership,
+                get_groups,
+                put_group,
+                delete_group,
+                post_santas,
+                get_santa
             ],
         )
         .launch();
