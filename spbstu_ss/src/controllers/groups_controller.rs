@@ -12,6 +12,7 @@ pub trait GroupsControllerTraits {
     fn get_group(&self, group_id: i32) -> Result<Group, Error>;
     fn update_group(&self, group_id:i32, data: UpdatedGroup) -> Result<Group, Error>;
     fn delete_group(&self, group_id:i32) -> Result<usize, Error>;
+    fn close_group(&self, group_id: i32) -> Result<Group, Error>;
 }
 
 impl GroupsControllerTraits for GroupsController {
@@ -49,5 +50,15 @@ impl GroupsControllerTraits for GroupsController {
         let mut connection = establish_connection();
         return diesel::delete(groups.filter(group_id.eq(_group_id)))
             .execute(&mut connection);
+    }
+    fn close_group(&self, _group_id: i32) -> Result<Group, Error> {
+        use crate::schema::groups::dsl::*;
+        let data = CloseGroup{
+            status: "closed".to_string()
+        };
+        let mut connection = establish_connection();
+        return diesel::update(groups.filter(group_id.eq(_group_id)))
+            .set(&data)
+            .get_result::<Group>(&mut connection);
     }
 }

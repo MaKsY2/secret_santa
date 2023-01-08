@@ -12,7 +12,8 @@ pub struct SantasController();
 
 pub trait SantasControllerTraits {
     fn get_santas(&self, group_id: i32) -> Result<Vec<Santa>, Error>;
-    fn generate_santas(&self, group_id: i32) -> Result<Vec<Santa>, Error>;
+    fn generate_santas(&self, group_id: i32) -> Result<usize, Error>;
+    fn get_santa(&self, _group_id: i32, _user_id: i32) -> Result<Santa, Error>;
 }
 
 
@@ -24,11 +25,18 @@ impl SantasControllerTraits for SantasController {
             .filter(group_id.eq(_group_id))
             .load::<Santa>(&mut connection);
     }
-    fn generate_santas(&self, group_id: i32) -> Result<Vec<Santa>, Error> {
+    fn get_santa(&self, _group_id: i32, _user_id: i32) -> Result<Santa, Error>{
+        use crate::schema::santas::dsl::*;
+        let mut connection = establish_connection();
+        return santas
+            .filter(group_id.eq(_group_id).and(santa_user_id.eq(_user_id)))
+            .first::<Santa>(&mut connection);
+    }
+    fn generate_santas(&self, group_id: i32) -> Result<usize, Error> {
         let memberships_ctrl = MembershipsController();
         let mut memberships = memberships_ctrl.get_memberships(Some(group_id), None);
         if memberships.len() == 0 {
-            return Ok(vec![]);
+            return Ok(0);
         }
 
         memberships.shuffle(&mut thread_rng());
@@ -49,6 +57,6 @@ impl SantasControllerTraits for SantasController {
         let mut connection = establish_connection();
         return diesel::insert_into(santas::table)
             .values(&santas)
-            .get_results(&mut connection);
+            .execute(&mut connection);
     }
 }
