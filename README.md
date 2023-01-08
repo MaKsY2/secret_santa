@@ -15,7 +15,11 @@ cd secret_santa/spbstu_ss/
 ```
 echo 'DATABASE_URL=postgres://postgres:postgres@localhost/diesel_demo' > .env
 ```
-### 5) build and run
+### 5) Apply migrations
+```
+diesel migration run
+```
+### 6) Build and run
 ```
 cargo build --package spbstu_ss --bin spbstu_ss
 cargo run --package spbstu_ss --bin spbstu_ss
