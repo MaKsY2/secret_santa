@@ -16,7 +16,7 @@ pub trait MembershipsControllerTraits {
 
 impl MembershipsControllerTraits for MembershipsController {
     fn get_memberships(&self, _group_id: Option<i32>, _user_id: Option<i32>) -> Vec<Membership> {
-        use crate::schema::memberships::dsl::*;
+        use crate::myschema::memberships::dsl::*;
         let mut connection = establish_connection();
         if _group_id.is_some() && _user_id.is_some() {
             return match memberships
@@ -49,7 +49,7 @@ impl MembershipsControllerTraits for MembershipsController {
         }
     }
     fn create_membership(&self, data: NewMembership) -> Membership {
-        use crate::schema::memberships;
+        use crate::myschema::memberships;
         let mut connection = establish_connection();
         return diesel::insert_into(memberships::table)
             .values(&data)
@@ -57,14 +57,14 @@ impl MembershipsControllerTraits for MembershipsController {
             .expect("Error saving new membership")
     }
     fn get_membership(&self, _group_id: i32, _user_id: i32) -> Result<Membership, Error> {
-        use crate::schema::memberships::dsl::*;
+        use crate::myschema::memberships::dsl::*;
         let mut connection = establish_connection();
         return memberships
             .filter(group_id.eq(_group_id).and(user_id.eq(_user_id)))
             .first::<Membership>(&mut connection);
     }
     fn update_membership(&self, _group_id:i32, _user_id: i32, data: UpdatedMembership) -> Result<Membership, Error> {
-        use crate::schema::memberships::dsl::*;
+        use crate::myschema::memberships::dsl::*;
         let mut connection = establish_connection();
         return diesel::update(memberships
                 .filter(group_id.eq(_group_id).and(user_id.eq(_user_id))))
@@ -72,7 +72,7 @@ impl MembershipsControllerTraits for MembershipsController {
             .get_result::<Membership>(&mut connection);
     }
     fn delete_membership(&self, _group_id: i32, _user_id: i32) -> Result<usize, Error> {
-        use crate::schema::memberships::dsl::*;
+        use crate::myschema::memberships::dsl::*;
         let mut connection = establish_connection();
         return diesel::delete(memberships
                 .filter(group_id.eq(_group_id).and(user_id.eq(_user_id))))

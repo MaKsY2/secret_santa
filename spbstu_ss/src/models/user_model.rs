@@ -2,7 +2,7 @@ use diesel::{Queryable, Insertable, AsChangeset};
 
 use serde_derive::{Serialize, Deserialize};
 
-use crate::schema::users;
+use crate::myschema::users;
 
 #[derive(Queryable, Serialize)]
 #[diesel(table_name = users_wo_passwords)]

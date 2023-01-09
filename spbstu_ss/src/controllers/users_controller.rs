@@ -18,14 +18,14 @@ pub trait UsersControllerTraits {
 
 impl UsersControllerTraits for UsersController {
     fn get_users(&self) -> Vec<User> {
-        use crate::schema::users_wo_passwords::dsl::*;
+        use crate::myschema::users_wo_passwords::dsl::*;
         let mut connection = establish_connection();
         return users_wo_passwords
             .load::<User>(&mut connection)
             .expect("Error loading users");
     }
     fn create_user(&self, data: NewUser) -> User {
-        use crate::schema::users;
+        use crate::myschema::users;
         let mut connection = establish_connection();
         let uwp = diesel::insert_into(users::table)
             .values(&data)
@@ -37,21 +37,21 @@ impl UsersControllerTraits for UsersController {
         }
     }
     fn get_user(&self, _user_id: i32) -> Result<User, Error> {
-        use crate::schema::users_wo_passwords::dsl::*;
+        use crate::myschema::users_wo_passwords::dsl::*;
         let mut connection = establish_connection();
         return users_wo_passwords
             .filter(user_id.eq(_user_id))
             .first::<User>(&mut connection);
     }
     fn get_user_by_name(&self, user_name: &String) -> Result<User, Error> {
-        use crate::schema::users_wo_passwords::dsl::*;
+        use crate::myschema::users_wo_passwords::dsl::*;
         let mut connection = establish_connection();
         return users_wo_passwords
             .filter(name.eq(user_name))
             .first::<User>(&mut connection);
     }
     fn update_user(&self, _user_id: i32, data: UpdatedUser) -> Result<User, Error> {
-        use crate::schema::users::dsl::*;
+        use crate::myschema::users::dsl::*;
         let mut connection = establish_connection();
         let uwp = match diesel::update(users.filter(user_id.eq(_user_id)))
             .set(&data)
@@ -65,13 +65,13 @@ impl UsersControllerTraits for UsersController {
         })
     }
     fn delete_user(&self, _user_id: i32) -> Result<usize, Error> {
-        use crate::schema::users::dsl::*;
+        use crate::myschema::users::dsl::*;
         let mut connection = establish_connection();
         return diesel::delete(users.filter(user_id.eq(_user_id))).execute(&mut connection);
     }
 
     fn check_password(&self, _name: &String, _password: &String) -> bool {
-        use crate::schema::users::dsl::*;
+        use crate::myschema::users::dsl::*;
         let mut connection = establish_connection();
         return users
             .filter(name.eq(_name))

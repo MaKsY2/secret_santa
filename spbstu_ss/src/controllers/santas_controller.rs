@@ -19,14 +19,14 @@ pub trait SantasControllerTraits {
 
 impl SantasControllerTraits for SantasController {
     fn get_santas(&self, _group_id: i32) -> Result<Vec<Santa>, Error> {
-        use crate::schema::santas::dsl::*;
+        use crate::myschema::santas::dsl::*;
         let mut connection = establish_connection();
         return santas
             .filter(group_id.eq(_group_id))
             .load::<Santa>(&mut connection);
     }
     fn get_santa(&self, _group_id: i32, _user_id: i32) -> Result<Santa, Error>{
-        use crate::schema::santas::dsl::*;
+        use crate::myschema::santas::dsl::*;
         let mut connection = establish_connection();
         return santas
             .filter(group_id.eq(_group_id).and(santa_user_id.eq(_user_id)))
@@ -53,7 +53,7 @@ impl SantasControllerTraits for SantasController {
                     santa_user_id: memberships.last().unwrap().user_id,
                     receiver_user_id: memberships.first().unwrap().user_id}
         );
-        use crate::schema::santas;
+        use crate::myschema::santas;
         let mut connection = establish_connection();
         return diesel::insert_into(santas::table)
             .values(&santas)

@@ -2,7 +2,7 @@ use diesel::{Queryable, Insertable, AsChangeset};
 
 use serde_derive::{Serialize, Deserialize};
 
-use crate::schema::groups;
+use crate::myschema::groups;
 
 #[derive(Queryable, Serialize)]
 #[diesel(table_name = groups)]

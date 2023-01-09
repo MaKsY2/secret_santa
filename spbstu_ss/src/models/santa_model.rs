@@ -2,7 +2,7 @@ use diesel::{Queryable, Insertable};
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::schema::santas;
+use crate::myschema::santas;
 
 #[derive(Queryable, Insertable, Deserialize, Serialize)]
 #[diesel(table_name = santas)]
