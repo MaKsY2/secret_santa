@@ -2,7 +2,7 @@ use diesel::{Queryable, Insertable, AsChangeset};
 
 use serde_derive::{Serialize, Deserialize};
 
-use crate::schema::memberships;
+use crate::myschema::memberships;
 
 #[derive(Queryable, Serialize)]
 #[diesel(table_name = memberships)]
