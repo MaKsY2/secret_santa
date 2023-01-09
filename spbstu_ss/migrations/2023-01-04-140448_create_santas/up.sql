@@ -7,6 +7,6 @@ CREATE TABLE santas (
   PRIMARY KEY (group_id, santa_user_id)
 );
 
-ALTER TABLE santas ADD FOREIGN KEY (group_id) REFERENCES groups (group_id);
-ALTER TABLE santas ADD FOREIGN KEY (santa_user_id) REFERENCES users (user_id);
-ALTER TABLE santas ADD FOREIGN KEY (receiver_user_id) REFERENCES users (user_id);
+ALTER TABLE santas ADD FOREIGN KEY (group_id) REFERENCES groups (group_id) ON DELETE CASCADE;
+ALTER TABLE santas ADD FOREIGN KEY (santa_user_id) REFERENCES users (user_id) ON DELETE CASCADE;
+ALTER TABLE santas ADD FOREIGN KEY (receiver_user_id) REFERENCES users (user_id) ON DELETE CASCADE;
