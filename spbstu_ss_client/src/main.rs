@@ -193,6 +193,7 @@ unsafe fn signup_handler(args: Vec<&str>) {
     };
     let client = Client::builder().build().unwrap();
     let response = client.post("http://localhost:8000/users")
+        .json(&data)
         .send()
         .unwrap();
     match response.status() {
