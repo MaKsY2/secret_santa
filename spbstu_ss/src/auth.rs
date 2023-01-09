@@ -9,7 +9,7 @@ use chrono::Utc;
 
 pub fn create_jwt(uid: i32, name: &String) -> String {
     let expiration = Utc::now()
-        .checked_add_signed(chrono::Duration::seconds(60))
+        .checked_add_signed(chrono::Duration::seconds(2678400))
         .expect("valid timestamp")
         .timestamp();
 
