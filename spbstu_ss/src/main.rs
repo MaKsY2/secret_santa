@@ -73,7 +73,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for UserFromToken {
                 }
                 // invalid token
                 // Err(e) => Outcome::Failure((Status::Unauthorized, "invalid token".to_string()))
-                Err(e) => panic!("{}", e.to_string()),
+                Err(_e) => Outcome::Failure((Status::Unauthorized, "invalid or expired token".to_string())),
             },
             // token does not exist
             None => Outcome::Failure((Status::Unauthorized, "token does not exist".to_string())), // None => Outcome::Failure((Status::Unauthorized))
@@ -282,14 +282,6 @@ fn put_group(group_id: i32, data: Json<UpdatedGroup>, user: UserFromToken) -> Re
         { return Err(Status::Unauthorized) } else { panic!("{}", e.to_string()) },
         Ok(m) => if m.role != "admin" { return Err(Status::Unauthorized); }
     }
-    let memes = memberships_controller.get_memberships(Some(group_id), None);
-    let mut f = false;
-    for meme in memes {
-        if meme.user_id != user.0.user_id && meme.role == "admin" {
-            f = true;
-        }
-    }
-    if !f {return Err(Status::Conflict);}
     let controller : GroupsController = GroupsController();
     return match controller.update_group(group_id, data.into_inner()) {
         Ok(group) => Ok(Json(group)),
@@ -369,14 +361,13 @@ fn main() {
                 put_user,
                 delete_user,
                 get_memberships,
-                get_membership,
                 post_membership,
                 put_membership,
                 delete_membership,
                 get_groups,
                 get_group,
                 put_group,
-                post_group,
+                post_groups,
                 delete_group,
                 post_santas,
                 get_santa
