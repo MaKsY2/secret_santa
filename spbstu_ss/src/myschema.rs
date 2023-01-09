@@ -32,6 +32,13 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    users_wo_passwords (user_id) {
+        user_id -> Int4,
+        name -> Varchar,
+    }
+}
+
 diesel::joinable!(memberships -> groups (group_id));
 diesel::joinable!(memberships -> users (user_id));
 diesel::joinable!(santas -> groups (group_id));
