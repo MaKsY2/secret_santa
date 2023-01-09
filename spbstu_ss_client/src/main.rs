@@ -180,13 +180,36 @@ unsafe fn user_input(handlers: &HashMap<String, unsafe fn(Vec<&str>)>, input: St
     };
 }
 
+#[derive(Serialize)]
+struct CreateUser {
+    pub name: String,
+    pub password: String
+}
+
+unsafe fn signup_handler(args: Vec<&str>) {
+    let data = CreateUser {
+        name: args[0].to_string(),
+        password: args[1].to_string()
+    };
+    let client = Client::builder().build().unwrap();
+    let response = client.post("http://localhost:8000/users")
+        .send()
+        .unwrap();
+    match response.status() {
+        StatusCode::OK => println!("successfully signed up"),
+        _ => print!("Something went wrong")
+    }
+}
+
 fn main() {
     let mut buffer = String::new();
     let mut handlers: HashMap<String, unsafe fn(Vec<&str>)> = HashMap::new();
     handlers.insert("exit".to_string(), exit_handler);
     handlers.insert("login".to_string(), login_handler);
     handlers.insert("logout".to_string(), logout_handler);
+    handlers.insert("signup".to_string(), signup_handler);
     handlers.insert("groups".to_string(), groups_handler);
+    handlers.insert("signup".to_string(), signup_handler);
 
     while std::io::stdin().read_line(&mut buffer).is_ok() {
         unsafe {
